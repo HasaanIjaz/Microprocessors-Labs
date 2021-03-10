@@ -1,0 +1,111 @@
+ORG 0
+
+LJMP MAIN; BY-PASS THE INTERRUPT VECTOR TABLE (IVT)
+
+ORG 0013H; POINT TO INT1 MEMORY LOCATION IN IVT
+
+LJMP INTERRUPTSERVICEROUTINE; 
+
+
+
+
+
+
+
+ORG 30H
+
+MAIN:
+
+	acall	CONFIGURE_LCD
+
+
+
+
+
+
+
+
+
+KEYBOARD_LOOP:
+
+	acall KEYBOARD
+
+	;now, A has the key pressed
+
+	acall SEND_DATA
+
+
+
+	SUBB A,#30H; NOW ACC = HEX VALUE
+
+	MOV 40H, A; 
+
+	MOV 41H, #0H; 
+
+	SETB TCON.2 ;make INT1 edge-triggered interrupt
+
+	MOV IE,#10000100B ; ENABLE EXTERNAL INTERRUPT
+
+	sjmp $; STAY HERE TILL TIME = INFINITY
+
+ 
+
+
+
+
+
+INTERRUPTSERVICEROUTINE: 
+
+
+
+mov r3, 41h
+
+cjne r3, #0h, Rise2
+
+setb p3.0
+
+inc r3
+
+mov 41h, r3
+
+sjmp endrise
+
+Rise2:
+
+cjne r3, #1h, Rise3
+
+clr p3.0
+
+inc r3
+
+mov 41h, r3
+
+mov A, 40h
+
+subb A, r3
+
+cjne A, #0h, endrise
+
+mov 41h, #0h
+
+sjmp endrise
+
+Rise3:
+
+inc r3
+
+mov 41h, r3
+
+mov A, 40h
+
+subb A, r3
+
+cjne A, #0h, endrise
+
+mov 41h, #0h
+
+endrise:
+
+
+
+reti
